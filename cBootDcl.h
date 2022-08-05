@@ -13,6 +13,8 @@
 
 //此软件模块使用MIT协议， 请在您在你设备适当位置放置此字符串的显示
 #define C_BOOT_DCL_VERSION    "cBootDcl V1.00"  
+//boot区带显示提示
+#define C_BOOT_DCL_LOADER_VERSION    "cBootDcl Loader V1.00"  
 
 /***********************************************************************
                           工作流程说明
@@ -104,7 +106,7 @@ void cBootDcl_Init(void);
 void cBootDcl_Task(void);
 
 //------------------------------是否在工作状态--------------------------
-#define cBootDcl_IsDoing()  (cBootDcl.Timer);
+#define cBootDcl_IsDoing()  (cBootDcl.Timer)
 
 //-----------------------------接收数据处理----------------------------
 //返回发送数据个数，0或负不返回
@@ -138,7 +140,7 @@ signed char cBootDcl_cbIsEnEnter(signed char IsEncrypted,//加密链接
 signed char cBootDcl_cbIsEnQuit(unsigned long Key);
 
 //----------------------------是否写入Flash准备-------------------------
-//数据区长度在cBootDcl.WrCountD4里
+//数据帧起始在cBootDcl.FrameNo里，数据区长度在cBootDcl.WrCountD4里
 //若为加密数据，应负责解密
 //返回：准备好时 返回0
 //      准备好但需擦除后再写入时 返回1

@@ -125,7 +125,7 @@ signed char cBootDcl_cbIsEnQuit(unsigned long Key)
 }
 
 //----------------------------ÊÇ·ñÐ´ÈëFlash×¼±¸-------------------------
-//Êý¾ÝÇø³¤¶ÈÔÚcBootDcl.WrCountD4Àï
+//Êý¾ÝÖ¡ÆðÊ¼ÔÚcBootDcl.FrameNoÀï£¬ Êý¾ÝÇø³¤¶ÈÔÚcBootDcl.WrCountD4Àï
 //ÈôÎª¼ÓÃÜÊý¾Ý£¬Ó¦¸ºÔð½âÃÜ
 //·µ»Ø£º×¼±¸ºÃÊ± ·µ»Ø0
 //      ×¼±¸ºÃµ«Ðè²Á³ýºóÔÙÐ´ÈëÊ± ·µ»Ø1
@@ -133,6 +133,9 @@ signed char cBootDcl_cbIsEnQuit(unsigned long Key)
 signed char cBootDcl_cbIsWrFlashRdy(signed char IsEncrypted,//ÊÇ·ñÎª¼ÓÃÜÊý¾Ý
                                      unsigned char *pData) //´ÓÀàÐÍIDÆðÊý¾Ý
 {
+  if(cBootDcl.FrameNo >= _SectorToPacktLut[BOOT_SECTOR_COUNT])//°üID³¬ÏÞ
+      return C_BOOT_DCL_ERR_PACKET_ID;
+
   //¼ÓÃÜÊý¾ÝÊ±£¬ÏÈ½âÃÜ
   unsigned short Len = cBootDcl.WrCountD4 * 4;
   if(IsEncrypted){
@@ -195,8 +198,6 @@ signed char cBootDcl_cbFlashWr(signed char State, //0Ö±½ÓÐ´,1²Á³ýºóÐ´,2Ð´Íê³É±êÖ
     return 0;//³É¹¦
   }
   //BOOTÇø±à³ÌÊ±£¬cBootDcl_cbIsWrFlashRdy()Ò»´ÎÐÔÌáÇ°²Á³ýÍê³ÉÁË£¬¹Ê²»¼ì²é²Á³ý±êÖ¾
-  if(cBootDcl.FrameNo >= _SectorToPacktLut[BOOT_SECTOR_COUNT])
-    return C_BOOT_DCL_ERR_PACKET_ID;//°üID³¬ÏÞ
   
   //Ð´ÈëÊý¾Ý
   Flash_Unlock();  
