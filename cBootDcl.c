@@ -30,7 +30,7 @@ void cBootDcl_Init(void)
 }
 
 //--------------------------------任务函数------------------------------
-//放入1s进程
+//放入1s进程,若不需要自动退出功能(如boot由外部管理)，则可不调用此函数
 void cBootDcl_Task(void)
 {
   if(!cBootDcl.Timer) return;
