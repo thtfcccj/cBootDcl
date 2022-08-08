@@ -114,14 +114,16 @@ signed char cBootDcl_cbIsEnEnter(signed char IsEncrypted,//加密链接
 //返回0成功(应该重启了)，非0错误码
 signed char cBootDcl_cbIsEnQuit(unsigned long Key)
 {
+  if(!cBootDcl_IsDoing()) return C_BOOT_DCL_ERR_CONNECT; //运行中才能进入  
+  
   if(cBootDcl.IsEncrypted){//加密链接时，比较固定密码
     if(Key != 0x55aaaa55) return C_BOOT_DCL_ERR_KEY;
   }
   else if(Key != cBootDcl_BootInFlash_cbGetUID())//普通链接时
     return C_BOOT_DCL_ERR_KEY;
   
-  cBootDcl_BootInFlash_cbEnterBoot(); //这里重启,并进入BOOT状态
-  return 0;
+  cBootDcl_BootInFlash_cbEnterBoot(0); //这里重启,并进入BOOT状态
+  return -1;
 }
 
 //----------------------------是否写入Flash准备-------------------------
@@ -145,7 +147,7 @@ signed char cBootDcl_cbIsWrFlashRdy(signed char IsEncrypted,//是否为加密数据
   }
   //检查数据区校验码正确性
   pData += 6;//指向数据区了
-  unsigned long Adler32 = Adler32_Get(1, pData, Len); 
+  unsigned long Adler32 = Adler32_Get(C_BOOT_ADLER32_INIT, pData, Len); 
   if(Adler32 != MsbFull2L(pData + Len)) 
     return C_BOOT_DCL_ERR_CHECK; //数据校验错误 
   
@@ -214,7 +216,7 @@ signed char cBootDcl_cbFlashCheck(unsigned char State,//0编号,1扇区，2所有
 {
   //全部BOOT区校验
   if(State == 2){
-    unsigned long Adler32 = 1;
+    unsigned long Adler32 = C_BOOT_ADLER32_INIT;
     for(unsigned char Pos = 0 ; Pos < BOOT_SECTOR_COUNT; Pos++){
       WDT_Week();//假定扇区校验时间不超看门狗时间
       Adler32 = Adler32_Get(Adler32, 
@@ -243,7 +245,8 @@ signed char cBootDcl_cbFlashCheck(unsigned char State,//0编号,1扇区，2所有
   else return C_BOOT_DCL_ERR_FUN_CODE;//异常
   
   WDT_Week();//假定扇区校验时间不超看门狗时间
-  if(Adler32_Get(1, (const unsigned char *)Base, Len) == CheckCode)
+  if(Adler32_Get(C_BOOT_ADLER32_INIT, 
+                 (const unsigned char *)Base, Len) == CheckCode)
     return 0;
   return 1;//校验错误
 }

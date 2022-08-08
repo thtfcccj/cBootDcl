@@ -80,7 +80,7 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
   //建立连接时
   if((FunCode == _HAND_NOR) || (FunCode == _HAND_CRYPTO)){
     unsigned char IsCrypto = FunCode - _HAND_NOR;//加密通道标志
-    cBootDcl_cbIsEnEnter(IsCrypto, MsbFull2L(pData + 3));
+    Resume = cBootDcl_cbIsEnEnter(IsCrypto, MsbFull2L(pData + 3));
     if(Resume == 0){//同意进入了
       cBootDcl.Timer = C_BOOT_DCL_DOING_OV;//进入
       cBootDcl.IsEncrypted = IsCrypto;//加密连接
@@ -113,7 +113,7 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
         *pData = (unsigned char)C_BOOT_DCL_ERR_LEN;
         return 2 + 1;
       }
-      unsigned char IsCrypto = FunCode - _HAND_NOR;//加密通道标志
+      unsigned char IsCrypto = FunCode - 0x5a;//加密通道标志
       if(_DataIsInvalid(IsCrypto)){
         *pData = (unsigned char)C_BOOT_DCL_ERR_CH_MATCH; //加密通道不匹配
         return 2 + 1;
