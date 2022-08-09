@@ -14,6 +14,10 @@
                          相关配置
 ***********************************************************************/
 
+//定义cBootDclShareRAM.Adler32使用识别器交换数据,否则使用Adler32校验码
+//同时定义识别值，BOOT误别到此特殊值时，进入BOOT
+//#define C_BOOT_DCL_SHARE_RAM_SW_IDENT    0x62653654
+
 //共享区域大小，需 >=4且以4倍为关系
 #ifndef C_BOOT_DCL_SHARE_RAM_COUNT    
   #define C_BOOT_DCL_SHARE_RAM_COUNT  16
@@ -38,7 +42,7 @@ extern struct _cBootDclShareRAM cBootDclShareRAM;
 /***********************************************************************
                               相关函数
 ***********************************************************************/
-#include "Adler32.h"
+
 #include <string.h>
 //---------------------------App端初始化-------------------------------
 //此函数仅在APP端调用
@@ -46,15 +50,24 @@ extern struct _cBootDclShareRAM cBootDclShareRAM;
   memset(&cBootDclShareRAM, 0, sizeof(struct _cBootDclShareRAM));}while(0)
 
 //-----------------------App端Data改变后更新----------------------------
-//用以更新Adler32值
-#define cBootDclShareRAM_AppDataChangedUpdate() do{cBootDclShareRAM.Adler32 = \
-  Adler32_Get(1, cBootDclShareRAM.Data, C_BOOT_DCL_SHARE_RAM_COUNT);}while(0)
+#ifdef C_BOOT_DCL_SHARE_RAM_SW_IDENT //用识别码交换数据
+  #include "Adler32.h"    
+  #define cBootDclShareRAM_AppDataChangedUpdate() do{\
+    cBootDclShareRAM.Adler32 = C_BOOT_DCL_SHARE_RAM_SW_IDENT;}while(0)
+#else   //Adler32值交换数据
+  #define cBootDclShareRAM_AppDataChangedUpdate() do{cBootDclShareRAM.Adler32 = \
+    Adler32_Get(1, cBootDclShareRAM.Data, C_BOOT_DCL_SHARE_RAM_COUNT);}while(0)
+#endif
 
 //----------------------boot端检查此区域是否有效------------------------
 //用以检查是否为app端写入的数据
-#define cBootDclShareRAM_BootIsValid()  (cBootDclShareRAM.Adler32 == \
-  Adler32_Get(1, cBootDclShareRAM.Data, C_BOOT_DCL_SHARE_RAM_COUNT))
-
+#ifdef C_BOOT_DCL_SHARE_RAM_SW_IDENT //用识别码交换数据
+  #define cBootDclShareRAM_BootIsValid() \
+    (cBootDclShareRAM.Adler32 == C_BOOT_DCL_SHARE_RAM_SW_IDENT)
+#else   //Adler32值交换数据
+  #define cBootDclShareRAM_BootIsValid()  (cBootDclShareRAM.Adler32 == \
+    Adler32_Get(1, cBootDclShareRAM.Data, C_BOOT_DCL_SHARE_RAM_COUNT))
+#endif
 
 #endif
 
