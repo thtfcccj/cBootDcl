@@ -17,9 +17,9 @@
 #endif
 
 //----------------------------------默认定义-----------------------------
-//为BOOT区分配的ID号(非0)
+//为BOOT区分配的ID号(需>=128)
 #ifndef BOOT_ID 
-  #define  BOOT_ID  128
+  #define  BOOT_ID  0xaa
 #endif
 
 //BOOT区幻数

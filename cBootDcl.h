@@ -85,11 +85,12 @@
 ***********************************************************************/
 
 struct _cBootDcl{
-  unsigned char Timer;      //倒计时器,非0表示写Boot模式
+  unsigned char Timer;        //倒计时器,非0表示写Boot模式
   unsigned char IsEncrypted;  //是否为加密链接
-  unsigned char Id;        //本次建立链接的ID号
-  unsigned char WrCountD4; //最后一次写入数据个数/4值
-  unsigned short FrameNo;  //最后一次写入的数据帧编号
+  unsigned char IsProgram;    //程序,否则为资源文件
+  unsigned char Id;           //本次建立链接的ID号
+  unsigned char WrCountD4;    //最后一次写入数据个数/4值
+  unsigned short FrameNo;     //最后一次写入的数据帧编号
 };
 
 extern struct _cBootDcl cBootDcl;

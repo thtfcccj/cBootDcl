@@ -84,7 +84,8 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
     if(Resume == 0){//同意进入了
       cBootDcl.Timer = C_BOOT_DCL_DOING_OV;//进入
       cBootDcl.IsEncrypted = IsCrypto;//加密连接
-      cBootDcl.Id = *pData; //记住ID
+      cBootDcl.IsProgram = *pData & 0x80; //记住类别
+      cBootDcl.Id = *pData & 0x7f; //记住ID      
       cBootDcl_cbStateNotify(1);//通报
     }
     //else ;//不同意连接：保持现状
