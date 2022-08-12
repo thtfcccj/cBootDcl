@@ -14,9 +14,11 @@ struct _cBootDcl cBootDcl;
 #ifdef SUPPORT_APP_WR_BOOT  //支持APP端写BOOT时
   #define _HAND_NOR     0x12 //普通连接握手
   #define _HAND_CRYPTO  0x21  //加密连接握手
+  #define _BREAK        0x66  //断开连接
 #else //BOOT写APP时
   #define _HAND_NOR     0x34 //普通连接握手
   #define _HAND_CRYPTO  0x43  //加密连接握手
+  #define _BREAK        0x69  //断开连接
 #endif
 
 /***********************************************************************
@@ -64,7 +66,7 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
   
   //============================管理相关============================
   //断开连接并重启设备
-  if(FunCode == 0x66){
+  if(FunCode == _BREAK){
     signed char Resume = cBootDcl_cbIsEnQuit(MsbFull2L(pData));
     cBootDcl.Timer = 0;//直接退出,并退出连接
     cBootDcl_cbStateNotify(0);//通报
@@ -101,7 +103,7 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
   }
   
   //=========================写Flash协议相关==========================
-  if(cBootDcl.Id != *pData){//ID不匹配
+  if(cBootDcl.Id != (*pData & 0x7f)){//ID不匹配
     *pData = (unsigned char)C_BOOT_DCL_ERR_ID_OTHER; //其它类型ID了
     return 2 + 1;     
   }
@@ -110,7 +112,7 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
     case 0x5a:  //3.2大数据多帧写入协议,普通数据
     case 0x5c:{ //3.2大数据多帧写入协议,加密数据
       cBootDcl.WrCountD4 = *(pData + 3);      
-      if(Len != (12 + cBootDcl.WrCountD4 * 4)){//数据过短或不匹配
+      if(Len != ((unsigned short)cBootDcl.WrCountD4 * 4 + 12)){//数据过短或不匹配
         *pData = (unsigned char)C_BOOT_DCL_ERR_LEN;
         return 2 + 1;
       }
@@ -162,18 +164,18 @@ signed short cBootDcl_RcvPro(unsigned char *pData,//从子功能码起
         *pData = (unsigned char)C_BOOT_DCL_ERR_LEN;
         return 2 + 1;        
       }
-    }
-    //扇区校验
-    if(cBootDcl_cbFlashCheck(2, 0, MsbFull2L(pData + 5))){
-      *pData = 1; //不匹配了
-      return 2 + 1;      
-    }
-    //匹配了，写入结束符及文件名
-    cBootDcl_cbFlashWr(2, pData + 9);
-    break;
+      //扇区校验
+      if(cBootDcl_cbFlashCheck(2, 0, MsbFull2L(pData + 3))){
+        *pData = (unsigned char)C_BOOT_DCL_ERR_CHECK; //不匹配了
+        return 2 + 1;      
+      }
+      //匹配了，写入结束符及文件名
+      cBootDcl_cbFlashWr(2, pData + 7);
+      break;
     default: //不能识别的功能码
       *pData = (unsigned char)C_BOOT_DCL_ERR_FUN_CODE; 
-      return 2 + 1;    
+      return 2 + 1;   
+    }
   }
   //数据正确时返回
   *pData = C_BOOT_DCL_ERR_NO; 

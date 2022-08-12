@@ -103,10 +103,13 @@ signed char cBootDcl_cbIsEnEnter(signed char IsEncrypted,//加密链接
 {
   signed char Resume = cBootDcl_BootInFlash_cbIsEnEnter();
   if(Resume) return Resume;//当前系统状态不允许进入
+  if(IsEncrypted){//加密链接时，比较固定密码
+    if(Key != 0x55aaaa55) return C_BOOT_DCL_ERR_KEY;
+  }
   //普通连接密码不对，不允许进入
-  if(!IsEncrypted && (Key != cBootDcl_BootInFlash_cbGetUID())) 
+  else if(Key != cBootDcl_BootInFlash_cbGetUID()) 
     return C_BOOT_DCL_ERR_KEY;
-  //加密链接时，直接信任
+  //正确了
   return C_BOOT_DCL_ERR_NO;
 }
 
@@ -114,16 +117,10 @@ signed char cBootDcl_cbIsEnEnter(signed char IsEncrypted,//加密链接
 //返回0成功(应该重启了)，非0错误码
 signed char cBootDcl_cbIsEnQuit(unsigned long Key)
 {
-  if(!cBootDcl_IsDoing()) return C_BOOT_DCL_ERR_CONNECT; //运行中才能进入  
-  
-  if(cBootDcl.IsEncrypted){//加密链接时，比较固定密码
-    if(Key != 0x55aaaa55) return C_BOOT_DCL_ERR_KEY;
+  if((Key == 0x55aaaa55) ||  (Key == cBootDcl_BootInFlash_cbGetUID())){
+    cBootDcl_BootInFlash_cbEnterBoot(0); //这里重启,并进入BOOT状态    
   }
-  else if(Key != cBootDcl_BootInFlash_cbGetUID())//普通链接时
-    return C_BOOT_DCL_ERR_KEY;
-  
-  cBootDcl_BootInFlash_cbEnterBoot(0); //这里重启,并进入BOOT状态
-  return -1;
+  return C_BOOT_DCL_ERR_NO;  //仅退出模式
 }
 
 //----------------------------是否写入Flash准备-------------------------
